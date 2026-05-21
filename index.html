@@ -842,8 +842,12 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 /* SMOOTH SCROLL */
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click',e=>{
+    const target = document.querySelector(a.getAttribute('href'));
+    if(!target) return;
     e.preventDefault();
-    document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth'});
+    const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 68;
+    const top = target.getBoundingClientRect().top + window.pageYOffset - navH;
+    window.scrollTo({top, behavior:'smooth'});
   });
 });
 </script>

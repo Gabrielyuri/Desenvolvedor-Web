@@ -101,8 +101,20 @@ nav{
   margin-top:var(--nav-h);
   background:var(--ink);
 }
-.carr-track{display:flex;height:100%;transition:transform .65s cubic-bezier(.77,0,.18,1);will-change:transform}
-.carr-slide{min-width:100%;height:100%;position:relative;flex-shrink:0;overflow:hidden}
+.carr-track{
+  display:flex;height:100%;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.carr-track::-webkit-scrollbar{display:none}
+.carr-slide{
+  min-width:100%;height:100%;
+  position:relative;flex-shrink:0;overflow:hidden;
+  scroll-snap-align:start;scroll-snap-stop:always;
+}
 .slide-bg{width:100%;height:100%;position:relative}
 
 .slide-overlay{
@@ -793,30 +805,49 @@ drawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
   const counter=document.getElementById('carrCounter');
   const total=slides.length;
   let cur=0,timer;
+
   slides.forEach((_,i)=>{
     const d=document.createElement('div');
     d.className='carr-dot'+(i===0?' active':'');
     d.addEventListener('click',()=>{goTo(i);reset()});
     dotsEl.appendChild(d);
   });
-  function goTo(n){
-    cur=(n+total)%total;
-    track.style.transform=`translateX(-${cur*100}%)`;
+
+  function updateUI(){
     dotsEl.querySelectorAll('.carr-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
     counter.textContent=`${cur+1} / ${total}`;
   }
+
+  function goTo(n){
+    cur=(n+total)%total;
+    track.scrollTo({left:cur*track.clientWidth,behavior:'smooth'});
+    updateUI();
+  }
   function next(){goTo(cur+1)}
   function prev(){goTo(cur-1)}
+
   document.getElementById('carrNext').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();next();reset()});
   document.getElementById('carrPrev').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();prev();reset()});
-  function reset(){clearInterval(timer);timer=setInterval(next,4500)}
-  let tx=0,ty=0;
-  track.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
-  track.addEventListener('touchend',e=>{
-    const dx=e.changedTouches[0].clientX-tx;
-    const dy=e.changedTouches[0].clientY-ty;
-    if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){dx<0?next():prev();reset()}
+
+  /* sincronizar dots quando o usuário desliza com o dedo */
+  let scrollTimeout;
+  track.addEventListener('scroll',()=>{
+    clearTimeout(scrollTimeout);
+    scrollTimeout=setTimeout(()=>{
+      const idx=Math.round(track.scrollLeft/track.clientWidth);
+      if(idx!==cur){cur=idx;updateUI();reset()}
+    },80);
   },{passive:true});
+
+  function reset(){clearInterval(timer);timer=setInterval(next,4500)}
+
+  /* pausar autoplay enquanto o usuário toca o carrossel */
+  track.addEventListener('touchstart',()=>clearInterval(timer),{passive:true});
+  track.addEventListener('touchend',()=>reset(),{passive:true});
+
+  /* recalcular posição ao girar a tela */
+  window.addEventListener('resize',()=>{track.scrollTo({left:cur*track.clientWidth})});
+
   reset();
 })();
 

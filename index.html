@@ -556,8 +556,8 @@ footer>p{font-size:.68rem;color:rgba(255,255,255,.3);letter-spacing:.08em}
     <div class="carr-slide"><div class="slide-bg" style="background:url('https://gabrielyuri.github.io/Desenvolvedor-Web/foto5.png') center/cover no-repeat"><div class="slide-overlay"></div><div class="slide-content"><h3>Pisos & Áreas Externas</h3><p>Deck & Revestimentos · Durabilidade</p></div></div></div>
     <div class="carr-slide"><div class="slide-bg" style="background:url('https://gabrielyuri.github.io/Desenvolvedor-Web/foto6.png') center/cover no-repeat"><div class="slide-overlay"></div><div class="slide-content"><h3>Churrasqueiras & Áreas Gourmet</h3><p>Projetos comerciais · Acabamento impecável</p></div></div></div>
   </div>
-  <button class="carr-btn" id="carrPrev">&#8592;</button>
-  <button class="carr-btn" id="carrNext">&#8594;</button>
+  <button type="button" class="carr-btn" id="carrPrev" aria-label="Slide anterior">&#8592;</button>
+  <button type="button" class="carr-btn" id="carrNext" aria-label="Próximo slide">&#8594;</button>
   <div class="carr-dots" id="carrDots"></div>
   <div class="carr-counter" id="carrCounter">1 / 5</div>
 </div>
@@ -807,14 +807,15 @@ drawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
   }
   function next(){goTo(cur+1)}
   function prev(){goTo(cur-1)}
-  document.getElementById('carrNext').addEventListener('click',()=>{next();reset()});
-  document.getElementById('carrPrev').addEventListener('click',()=>{prev();reset()});
+  document.getElementById('carrNext').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();next();reset()});
+  document.getElementById('carrPrev').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();prev();reset()});
   function reset(){clearInterval(timer);timer=setInterval(next,4500)}
-  let tx=0;
-  track.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+  let tx=0,ty=0;
+  track.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
   track.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-tx;
-    if(Math.abs(dx)>45){dx<0?next():prev();reset()}
+    const dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){dx<0?next():prev();reset()}
   },{passive:true});
   reset();
 })();
